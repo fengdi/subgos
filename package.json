@@ -1,9 +1,19 @@
 {
   "name": "subgos",
   "version": "1.0.0",
+  "keywords": [
+    "subgos",
+    "nodejs",
+    "webserver"
+  ],
   "description": "A simple nodejs web server framework.",
   "license": "MIT",
   "main": "index.js",
+  "author": " <137757831@qq.com> (tangoboy <137757831@qq.com>)",
+  "repository": {
+    "type": "git",
+    "url": "https://git.oschina.net/ddm/subgos.git"
+  },
   "dependencies": {
     "cookie": ">=0.3.0",
     "ejs": ">=2.5.0",

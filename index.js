@@ -85,7 +85,7 @@ assign(http.Server.prototype, {
               result[1].forEach(function(param){
                 request.params[param.name] = param.value;
               });
-              return result[0](request, response);
+              return result[0].call(this, request, response);
           }
           finalhandler(request, response);
       });
@@ -134,7 +134,7 @@ assign(https.Server.prototype, {
               result[1].forEach(function(param){
                 request.params[param.name] = param.value;
               });
-              return result[0](request, response);
+              return result[0].call(this, request, response);
           }
           finalhandler(request, response);
       });

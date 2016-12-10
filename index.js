@@ -48,51 +48,68 @@ assign(http.ServerResponse.prototype, {
 
 //来自浏览器的请求 相当于拓展 request
 assign(http.IncomingMessage.prototype, {
-    cookies: function(){
+    cookies : function(){
         return cookie.parse(this.headers.cookie);
     },
-    uri: function(){
+    uri : function(){
         return url.parse(this.url);
+    },
+    isAjax : function(){
+      return this.headers['x-requested-with'] == 'XMLHttpRequest';
     }
 });
 
 
 
-//http服务器扩展
-var httpServerlisten = http.Server.prototype.listen;
-assign(http.Server.prototype, {
-    createRouter : function(){
-        if(!this.router){
-            this.router = new Router();
-        }
-    },
-    add: function(method, rule, handle){
-        this.createRouter();
-        this.router.add(method, rule, handle);
-    },
-    find: function(method, url){
-        this.createRouter();
-        return this.router.find(method, url);
-    },
-    //rewrite listen
-    listen : function(){
+//http 和 https 服务器扩展
+
+var serverMethodExtends = {
+  createRouter : function(){
+      if(!this.router){
+          this.router = new Router();
+      }
+  },
+  add: function(method, rule, handle){
       this.createRouter();
-      this.emit('listen');
-      this.on('request', function(request, response){
-          var result = this.find(request.method, request.url);
-          if (result  && typeof result[0] == 'function') {
-              request.params = {};
-              result[1].forEach(function(param){
-                request.params[param.name] = param.value;
-              });
-              return result[0].call(this, request, response);
-          }
-          finalhandler(request, response);
-      });
+      this.router.add(method, rule, handle);
+      return this;
+  },
+  find: function(method, url){
+      this.createRouter();
+      return this.router.find(method, url);
+  },
+  mainHandler: function(){
+    this.createRouter();
+    this.on('request', function(request, response){
+        var self = this;
 
-      return httpServerlisten.apply(this, arguments);
-    }
-});
+        var end = finalhandler(request, response, { onerror: function(err, req, res){
+          self.emit('error', err, req, res);
+        }});
+
+        var result = this.find(request.method, request.url);
+        if (result  && typeof result[0] == 'function') {
+            request.params = {};
+            result[1].forEach(function(param){
+              request.params[param.name] = param.value;
+            });
+            return result[0].call(this, request, response, end);
+        }else{
+          end();
+        }
+    });
+  }
+};
+
+assign(http.Server.prototype, serverMethodExtends);
+assign(https.Server.prototype, serverMethodExtends);
+
+
+
+
+//router methods
+//get post put ...
+
 Router.METHODS.forEach(M => {
   Object.defineProperty(http.Server.prototype, M.toLowerCase(), {
     value: function verb (path, handler) {
@@ -107,42 +124,21 @@ Router.METHODS.forEach(M => {
 });
 
 
-//https服务器扩展
+//rewrite listen
+
+var httpServerlisten = http.Server.prototype.listen;
 var httpsServerlisten = https.Server.prototype.listen;
-assign(https.Server.prototype, {
-    createRouter : function(){
-        if(!this.router){
-            this.router = new Router();
-        }
-    },
-    add: function(method, rule, handle){
-        this.createRouter();
-        this.router.add(method, rule, handle);
-    },
-    find: function(method, url){
-        this.createRouter();
-        return this.router.find(method, url);
-    },
-    //rewrite listen
-    listen : function(){
-      this.createRouter();
-      this.emit('listen');
-      this.on('request', function(request, response){
-          var result = this.find(request.method, request.url);
-          if (result  && typeof result[0] == 'function') {
-              request.params = {};
-              result[1].forEach(function(param){
-                request.params[param.name] = param.value;
-              });
-              return result[0].call(this, request, response);
-          }
-          finalhandler(request, response);
-      });
 
-      return httpsServerlisten.apply(this, arguments);
-    }
-});
-
+http.Server.prototype.listen = function(){
+  this.emit('listen');
+  this.mainHandler();
+  return httpServerlisten.apply(this, arguments);
+};
+https.Server.prototype.listen = function(){
+  this.emit('listen');
+  this.mainHandler();
+  return httpsServerlisten.apply(this, arguments);
+};
 
 
 

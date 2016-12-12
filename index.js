@@ -52,7 +52,7 @@ assign(http.IncomingMessage.prototype, {
         return cookie.parse(this.headers.cookie);
     },
     uri : function(){
-        return url.parse(this.url);
+        return url.parse(this.url, true);
     },
     isAjax : function(){
       return this.headers['x-requested-with'] == 'XMLHttpRequest';

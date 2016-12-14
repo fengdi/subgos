@@ -1,4 +1,5 @@
 #Subgos
+[![](https://img.shields.io/npm/v/subgos.svg)](https://www.npmjs.com/package/subgos) ![](https://img.shields.io/npm/dt/subgos.svg) ![](https://img.shields.io/npm/l/subgos.svg) ![](https://img.shields.io/node/v/subgos.svg)
 
 A simple nodejs web server framework.  [site](http://git.oschina.net/ddm/sugos "sugos")
 

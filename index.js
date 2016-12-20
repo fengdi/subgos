@@ -3,6 +3,8 @@
 var http = require('http');
 var https = require('https');
 var url = require('url');
+var util = require('util');
+
 
 
 //外部模块
@@ -42,9 +44,17 @@ assign(http.ServerResponse.prototype, {
                 callback(err, str);
             }
         });
+    },
+    redirect : function(url){
+      this.writeHead(302, {
+        'Location': url
+      });
+      this.end();
+    },
+    dump : function(mix){
+      this.writeHead(200, {'Content-Type': 'text/plain'});
+      this.end(util.inspect(mix));
     }
-    //TODO: Redirect
-    //
 });
 
 

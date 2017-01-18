@@ -61,7 +61,7 @@ assign(http.ServerResponse.prototype, {
 //来自浏览器的请求 相当于拓展 request
 assign(http.IncomingMessage.prototype, {
     cookies : function(){
-        return cookie.parse(this.headers.cookie);
+        return cookie.parse(this.headers.cookie||'');
     },
     uri : function(){
         return url.parse(this.url, true);
